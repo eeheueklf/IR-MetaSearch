@@ -14,9 +14,10 @@ public class ImageMetaData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String fileName;
+    private String latitudeRef; // 위도방향
     private double latitude; // 위도
+    private String longitudeRef; // 경도방향
     private double longitude; // 경도
-    private double altitude; // 경도
-//    private LocalDateTime timestamp; // 촬영 시간 (선택 사항)
+    private LocalDateTime timestamp; //날짜
 
 }
