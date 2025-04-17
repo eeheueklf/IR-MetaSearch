@@ -15,6 +15,8 @@ import com.example.irmetasearch.entity.ImageMetaData;
 import com.example.irmetasearch.service.ImageMetaDataService;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +48,10 @@ public class MetadataController {
             Metadata metadata = ImageMetadataReader.readMetadata(file.getInputStream());
 
             // GPS 정보 추출
+            String dateTimeOriginal = null;
+            String latitudeRef = null;
             String latitudeStr = null;
+            String longitudeRef = null;
             String longitudeStr = null;
 
             // 모든 디렉토리와 태그를 반복하여 GPS 정보 추출
@@ -55,17 +60,31 @@ public class MetadataController {
                     String tagName = tag.getTagName();
                     String tagValue = tag.getDescription();
 
-                    // GPS 태그를 찾으면 해당 값을 저장
-                    if (tagName.equals("GPS Latitude")) {
-                        latitudeStr = tagValue;
-                    } else if (tagName.equals("GPS Longitude")) {
-                        longitudeStr = tagValue;
+                    switch (tagName) {
+                        case "Date/Time Original":
+                            dateTimeOriginal = tagValue;
+                            break;
+                        case "GPS Latitude Ref":
+                            latitudeRef = tagValue;
+                            break;
+                        case "GPS Latitude":
+                            latitudeStr = tagValue;
+                            break;
+                        case "GPS Longitude Ref":
+                            longitudeRef = tagValue;
+                            break;
+                        case "GPS Longitude":
+                            longitudeStr = tagValue;
+                            break;
                     }
-
                     // 태그 이름과 값을 메타데이터 맵에 추가
-                    metadataMap.put(tagName, tagValue);
+
                 }
             }
+
+            metadataMap.put("GPS Latitude Ref", latitudeRef);
+            metadataMap.put("GPS Longitude Ref", longitudeRef);
+            metadataMap.put("Date/Time Original", dateTimeOriginal);
 
             // GPS 값이 존재하면 십진수로 변환
             double latitude = 0;
@@ -89,6 +108,13 @@ public class MetadataController {
             imageMetaData.setFileName(file.getOriginalFilename());
             imageMetaData.setLatitude(latitude);
             imageMetaData.setLongitude(longitude);
+            imageMetaData.setLatitudeRef(latitudeRef);
+            imageMetaData.setLongitudeRef(longitudeRef);
+            if (dateTimeOriginal != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+                LocalDateTime timestamp = LocalDateTime.parse(dateTimeOriginal, formatter);
+                imageMetaData.setTimestamp(timestamp);
+            }
 
             imageMetaDataService.save(imageMetaData);  // DB에 저장
 
