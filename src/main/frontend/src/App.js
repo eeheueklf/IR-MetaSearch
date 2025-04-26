@@ -1,19 +1,15 @@
-import {BrowserRouter, Meta, Route, Routes} from 'react-router-dom';
-import Metadata from "./page/Metadata";
-import KMeans from "./page/KMeans";
-import Metasearch from "./page/Metasearch";
+import { BrowserRouter as Router } from 'react-router-dom';
+import Index from "./components/_Layout/index";
+import { FileProvider } from "./contexts/FileContext";
+
 
 function App() {
     return (
-        <div className="App">
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<Metadata />} />
-                    <Route path="/kmeans" element={<KMeans />} />
-                    <Route path="/search" element={<Metasearch/>} />
-                </Routes>
-            </BrowserRouter>
-        </div>
+        <FileProvider>
+            <Router>
+                <Index />
+            </Router>
+        </FileProvider>
     );
 }
 
