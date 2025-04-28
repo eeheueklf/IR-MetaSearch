@@ -13,8 +13,9 @@
     --global_width_size: 1320px;
     --content_width_size: calc(var(--global_width_size) - 610px - 30px - 30px);
     background: #ffffff;
+    --point_color : #75aae3;
 }
 
 ::selection{
-    background-color: #e47171;
+    background-color: var(--point_color);
 }

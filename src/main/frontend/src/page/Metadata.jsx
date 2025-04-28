@@ -37,51 +37,60 @@ function Metadata() {
 
     return (
         <div>
-            <h2>이미지 메타데이터 추출</h2>
             <ResultWrap>
-                {selectedFile && (
-                <div>
-                    <h3>📸 업로드 된 이미지</h3>
+                <h1>이미지 메타데이터 추출하기</h1>
+                <h3>📸 업로드 된 이미지</h3>
+                {selectedFile ? (
                     <img
                         src={URL.createObjectURL(selectedFile)}
                         alt="업로드된 이미지"
-                        style={{maxWidth: 300, marginBottom: 16}}
                     />
-                </div>
-            )}
-            {metadata && (
-                <div>
-                    <h3>📸 추출된 EXIF 메타데이터</h3>
+                ) : (
+                    <PreviewPlaceholder>
+                        이미지 없음
+                    </PreviewPlaceholder>
+                )}
+
+
+                <h3>📰 추출된 EXIF 메타데이터</h3>
+                {metadata && (
                     <pre>{JSON.stringify(metadata, null, 2)}</pre>
-                </div>
-            )}
+                )}
+
             </ResultWrap>
             <ButtonContainer>
-                <DateTimeFilter/>
-            <FloatingButton onClick={() => navigate("/metasearch")}>
-                📸 + 이미지 검색하기
-            </FloatingButton>
+            {/*<DateTimeFilter/>*/}
+
+                <FloatingButton
+                    onClick={() => navigate("/searchfilter")}
+                    disabled={!selectedFile}
+                    style={{
+                        backgroundColor: selectedFile ? '#000' : '#666',
+                        cursor: selectedFile ? 'pointer' : 'default'
+                    }}
+                >
+                    📸 + 이미지 검색하기
+                </FloatingButton>
             </ButtonContainer>
         </div>
     );
 }
 
 const ResultWrap = styled.div`
-  flex: 1;
-  display: flex;
-flex-direction: row; 
-gap: 20px;
-  overflow-y: auto;
-  position: relative; 
+    flex: 1;
+    display: flex;
+    flex-direction: column; 
+    overflow-y: auto;
+    position: relative;
+    margin-top:20px;
 `;
+
 const ButtonContainer = styled.div`
-  flex: 1;
-  display: flex;
-flex-direction: column; 
-gap: 20px;
-  padding: 20px;
-  overflow-y: auto;
-  position: relative; 
+    flex: 1;
+    display: flex;
+    flex-direction: column; 
+    overflow-y: auto;
+    position: relative; 
 `;
 
 const FloatingButton = styled.button`
@@ -99,5 +108,18 @@ const FloatingButton = styled.button`
   &:hover {
     background-color: rgb(55, 58, 61);
   }
+`;
+
+const PreviewPlaceholder = styled.div`
+  width: 100%;
+  min-height: 400px;
+  background-color: #ccc;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #666;
+  border-radius: 8px;
+  font-size: 1rem;
 `;
 export default Metadata;

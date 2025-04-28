@@ -43,7 +43,7 @@ const LogoContainer = styled.div`
     gap: 10px;
     font-family: 'SUIT', sans-serif;
     span {
-        background-color: #e47171;
+        background-color: var(--point_color);
     }
     
 `;

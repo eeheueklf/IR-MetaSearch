@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import {Routes, Route} from "react-router-dom";
 
 import "../style.css";
-import Metadata from '../../page/Metadata';
+import Metadata from '../../page/Metadata'
+import MetaSearchFilter from '../../page/MetaSearchFilter';
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -17,6 +18,7 @@ const Index = () => {
                     <MainContent>
                         <Routes>
                             <Route path="/" element={<Metadata />} />
+                            <Route path="/searchfilter" element={<MetaSearchFilter />} />
 
                         </Routes>
                     </MainContent>
@@ -61,7 +63,6 @@ const ContentContainer = styled.div`
 const MainContent = styled.main`
     width: 100%;
     max-width: 100%;
-    padding: 0 20px;
     box-sizing: border-box;
 `;
 

@@ -1,17 +1,14 @@
 import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
-import { FiMic, FiImage, FiSend } from 'react-icons/fi';
+import { FiImage, FiSend } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom";
 import { FileContext } from '../../contexts/FileContext';
-
 
 const Header = () => {
     const { setSelectedFile } = useContext(FileContext);
     const [file, setFile] = useState(null);
     const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState('');
 
-    // 파일 선택
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file && file.size > 10 * 1024 * 1024) {
@@ -21,7 +18,6 @@ const Header = () => {
         setFile(file);
     };
 
-    // FiSend 클릭 시 파일을 Context에 저장하고 Metadata 페이지로 이동
     const handleSend = () => {
         if (!file) {
             alert("이미지 파일을 선택하세요.");
@@ -36,7 +32,8 @@ const Header = () => {
             <InputWrapper>
                 <Icon>
                     <label htmlFor="file-upload">
-                        <FiImage style={{ cursor: "pointer" }} />
+                        <FiImage />
+                        <span>이미지 불러오기</span>
                     </label>
                     <input
                         id="file-upload"
@@ -49,81 +46,80 @@ const Header = () => {
                 <FileName>
                     {file ? file.name : "이미지 파일을 선택하세요"}
                 </FileName>
-                <SendIcon onClick={handleSend}><FiSend /></SendIcon>
+                <SendIcon
+                    onClick={handleSend}
+                    active={!!file}
+                    title={file ? "업로드" : "이미지 파일을 선택하세요"}
+                >
+                    <FiSend />
+                </SendIcon>
             </InputWrapper>
         </HeaderContainer>
     );
 };
 
-
 const HeaderContainer = styled.header`
-    margin-top : 70px;
+    margin-top: 70px;
     display: flex;
     justify-content: center;
 `;
 
 const InputWrapper = styled.div`
-    background: #f7f9fb;
+    background: #fff;
     display: flex;
     align-items: center;
-    border-radius: 14px;
-    padding: 15px 15px;
+    border-radius: 10px;
+    padding: 11px 34px;
     width: 100%;
-    max-width: 900px;
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.08), 0 1.5px 4px rgba(0,0,0,0.03);
 
-    color: #f7f9fb; /* 초기 글자색 */
-    border: 1px solid transparent;
-
-    transition: border 0.3s ease-in-out, color 0.3s ease-in-out;
-
-    &:hover {
-        border: 1px solid #333333;
-        color: #444444;
-    }
+    border: 1.5px solid #e0e7ef;
+    gap: 16px;
 `;
-const FileName = styled.div`
-    flex: 1;
-    background: transparent;
-    border: none;
-    font-size : 0.8rem;
-    color: #444;
-    outline: none;
-    padding: 0 10px;
-`;
-
 
 const Icon = styled.div`
-    margin-right: 10px;
-    font-size: 1rem;
-    color: #555;
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    font-size: 1.3rem;
+    color: var(--point_color);
     cursor: pointer;
+
+    label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 7px;
+        font-weight: 500;
+        font-size: 1rem;
+        color: var(--point_color);
+        transition: color 0.2s;
+
+        &:hover {
+            color: #000;
+        }
+    }
 `;
 
-const SearchInput = styled.input`
+const FileName = styled.div`
     flex: 1;
-    background: transparent;
-    border: none;
-    font-size : 0.8rem;
-    color: #444;
-    outline: none;
+    font-size: 1rem;
+    color: #222;
     padding: 0 10px;
-
-    &::placeholder {
-        color: #ccc;
-    }
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 `;
 
 const SendIcon = styled.div`
-    margin-left: 10px;
-    font-size: 1rem;
-    color: #888;
-    cursor: pointer;
+    margin-top: 5px;
+    font-size: 1.2rem;
+    color : var(--point_color);
+    cursor: ${({ active }) => (active ? 'pointer' : 'not-allowed')};
 
     &:hover {
-        transform: scale(1.1);
-        color: #444;
+        color: ${({ active }) => (active ? '#000' : '#bbb')};
     }
 `;
-
 
 export default Header;
