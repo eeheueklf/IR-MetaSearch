@@ -8,6 +8,7 @@ import DateTimeFilter from "../components/_function/DateTimeFilter"
 function Metadata() {
     const { selectedFile } = useContext(FileContext);
     const [metadata, setMetadata] = useState(null);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,7 +28,14 @@ function Metadata() {
                     }
                 });
                 setMetadata(response.data);  // GPS 정보와 메타데이터 표시
+                setError(null);              // 에러 메시지 초기화
             } catch (error) {
+                let message = "메타데이터 추출 오류";
+                if (error.response && error.response.data && error.response.data.error) {
+                    message = error.response.data.error;
+                }
+                setError(message);           // 에러 메시지 상태에 저장
+                setMetadata(null);           // 메타데이터 초기화
                 console.error("메타데이터 추출 오류:", error);
             }
         };
@@ -53,6 +61,8 @@ function Metadata() {
 
 
                 <h3>📰 추출된 EXIF 메타데이터</h3>
+                {error && <div style={{ color: 'red' }}>{error}</div>}
+
                 {metadata && (
                     <pre>{JSON.stringify(metadata, null, 2)}</pre>
                 )}

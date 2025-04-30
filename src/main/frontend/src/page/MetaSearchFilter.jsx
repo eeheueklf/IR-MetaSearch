@@ -142,7 +142,7 @@ const MetaSearchFilter = ({ onFilterChange }) => {
                 </FilterCard>
             </ResultWrap>
             <ButtonContainer>
-                <FloatingButton onClick={() => navigate("/metasearch")}>
+                <FloatingButton onClick={() => navigate("/metasearch", {state : {searchType, radius, unit}})}>
                     📸 + 이미지 검색하기
                 </FloatingButton>
             </ButtonContainer>

@@ -7,6 +7,7 @@ import Metadata from '../../page/Metadata'
 import MetaSearchFilter from '../../page/MetaSearchFilter';
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import MetaSearch from "../../page/MetaSearch";
 
 const Index = () => {
     return (
@@ -19,6 +20,7 @@ const Index = () => {
                         <Routes>
                             <Route path="/" element={<Metadata />} />
                             <Route path="/searchfilter" element={<MetaSearchFilter />} />
+                            <Route path="/metasearch" element={<MetaSearch />} />
 
                         </Routes>
                     </MainContent>

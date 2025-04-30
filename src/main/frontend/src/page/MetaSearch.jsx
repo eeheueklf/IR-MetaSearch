@@ -1,162 +1,115 @@
-import React, { useState } from 'react';
+import { useContext, useEffect, useState } from "react";
+import axios from "axios";
 import styled from 'styled-components';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import {useNavigate} from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-const MetaSearchFilter = ({ onFilterChange }) => {
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
-    const [radius, setRadius] = useState(10); // 기본 반경 10km
+function MetaSearch() {
+    const location = useLocation();
+    const filter = location.state || {};
 
-    const navigate = useNavigate();
-    const handleStartDateChange = (date) => {
-        setStartDate(date);
-        onFilterChange({ startDate: date, endDate, radius });
-    };
+    const [result, setResults] = useState(null);
+    const [error, setError] = useState(null);
 
-    const handleEndDateChange = (date) => {
-        setEndDate(date);
-        onFilterChange({ startDate, endDate: date, radius });
-    };
+    useEffect(() => {
+        const fetchResults = async () => {
+            try {
+                const response = await axios.get("http://localhost:8080/api/search", {
+                    params: filter
+                });
+                setResults(response.data);
+            } catch (err) {
+                setError("검색 결과를 불러오지 못했습니다.");
+            }
+        };
+        fetchResults();
+    }, [filter]);
 
-    const handleRadiusChange = (e) => {
-        const value = Number(e.target.value);
-        setRadius(value);
-        onFilterChange?.({ startDate, endDate, radius });
-
-    };
 
     return (
-        <div>
-            <ResultWrap>
-                <h2>검색 필터 설정하기</h2>
-                <FilterContainer>
-                    <Section>
-                        <Label>날짜 범위 선택</Label>
-                        <DatePickers>
-                            <DatePicker
-                                selected={startDate}
-                                onChange={handleStartDateChange}
-                                selectsStart
-                                startDate={startDate}
-                                endDate={endDate}
-                                placeholderText="시작 날짜"
-                                dateFormat="yyyy-MM-dd"
-                                isClearable
-                            />
-                            <DatePicker
-                                selected={endDate}
-                                onChange={handleEndDateChange}
-                                selectsEnd
-                                startDate={startDate}
-                                endDate={endDate}
-                                minDate={startDate}
-                                placeholderText="종료 날짜"
-                                dateFormat="yyyy-MM-dd"
-                                isClearable
-                            />
-                        </DatePickers>
-                    </Section>
-
-                    <Section>
-                        <Label>위치 기반 반경 (km)</Label>
-                        <RadiusInput
-                            type="range"
-                            min={1}
-                            max={100}
-                            value={radius}
-                            onChange={handleRadiusChange}
-                        />
-                        <RadiusValue>{radius} km</RadiusValue>
-                    </Section>
-                </FilterContainer>
-            </ResultWrap>
-            <ButtonContainer>
-                <FloatingButton
-                    onClick={() => navigate("/metasearch")}
-                >
-                    📸 + 이미지 검색하기
-                </FloatingButton>
-            </ButtonContainer>
-        </div>
+        <ResultWrap>
+            <h1>🔎 검색 결과</h1>
+            <FilterCard>
+                {/*{loading && <InfoText>로딩 중...</InfoText>}*/}
+                {/*{error && <ErrorText>{error}</ErrorText>}*/}
+                {/*{!loading && !error && results.length === 0 && (*/}
+                {/*    <InfoText>검색 결과가 없습니다.</InfoText>*/}
+                {/*)}*/}
+                {/*{!loading && !error && results.map((item, idx) => (*/}
+                {/*    <ResultItem key={idx}>*/}
+                {/*        <Thumb src={`/uploads/${item.fileName}`} alt={item.fileName} />*/}
+                {/*        <MetaInfo>*/}
+                {/*            <div><strong>파일명:</strong> {item.fileName}</div>*/}
+                {/*            <div><strong>위도:</strong> {item.latitude}</div>*/}
+                {/*            <div><strong>경도:</strong> {item.longitude}</div>*/}
+                {/*            <div><strong>촬영일시:</strong> {item.timestamp}</div>*/}
+                {/*        </MetaInfo>*/}
+                {/*    </ResultItem>*/}
+                {/*))}*/}
+            </FilterCard>
+        </ResultWrap>
     );
-};
+}
 
 const ResultWrap = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column; 
-    overflow-y: auto;
-    position: relative;
-    margin-top:20px;
+    align-items: center;
+    margin-top: 30px;
 `;
 
-const FilterContainer = styled.div`
+const FilterCard = styled.div`
     display: flex;
     flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 400px;
-    overflow-y: auto;
-    margin-top:20px;
+    gap: 18px;
+    padding: 32px 28px 24px 28px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.08), 0 1.5px 4px rgba(0,0,0,0.03);
+    border: 1px solid #e0e7ef;
+    max-width: 660px;
+    width: 100%;
+    margin-bottom: 50px;
 `;
 
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Label = styled.label`
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #333;
-`;
-
-const DatePickers = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const RadiusInput = styled.input`
-  width: 100%;
-`;
-
-const RadiusValue = styled.div`
-  margin-top: 4px;
-  font-size: 0.9rem;
-  color: #555;
-`;
-
-
-const ButtonContainer = styled.div`
-    flex: 1;
+const ResultItem = styled.div`
     display: flex;
-    flex-direction: column; 
-    gap: 20px;
-    padding: 20px;
-    overflow-y: auto;
-    position: relative; 
+    align-items: center;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f4fa;
+    &:last-child {
+        border-bottom: none;
+    }
 `;
 
-const FloatingButton = styled.button`
-  align-self: flex-end;
-  margin: 50px 0;
-  background-color: #000000;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 15px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: rgb(55, 58, 61);
-  }
+const Thumb = styled.img`
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #e0e7ef;
+    background: #fafbfc;
 `;
 
-export default MetaSearchFilter;
+const MetaInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 1rem;
+    color: #222;
+`;
+
+const InfoText = styled.div`
+    color: #888;
+    text-align: center;
+    margin: 30px 0;
+`;
+
+const ErrorText = styled.div`
+    color: #ff4d4f;
+    text-align: center;
+    margin: 30px 0;
+    font-weight: bold;
+`;
+export default MetaSearch;

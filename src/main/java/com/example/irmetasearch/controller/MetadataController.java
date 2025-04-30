@@ -4,9 +4,8 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
-import com.drew.metadata.exif.ExifSubIFDDirectory;
-import com.drew.metadata.exif.GpsDirectory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,17 +13,24 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.irmetasearch.entity.ImageMetaData;
 import com.example.irmetasearch.service.ImageMetaDataService;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 public class MetadataController {
 
     @Autowired
     private ImageMetaDataService imageMetaDataService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     // 도, 분, 초 형식을 십진수로 변환하는 메서드
     private double convertDMS(String dms) {
@@ -44,8 +50,28 @@ public class MetadataController {
         Map<String, Object> metadataMap = new HashMap<>();
 
         try {
-            // 파일에서 메타데이터 읽기
-            Metadata metadata = ImageMetadataReader.readMetadata(file.getInputStream());
+            // 1. 파일 저장 (중복 체크)
+            File uploadFolder = new File(uploadDir);
+
+            if (!uploadFolder.exists()) {
+                uploadFolder.mkdirs();
+            }
+
+
+            String originalFileName = Paths.get(file.getOriginalFilename()).getFileName().toString();
+
+            File destFile = new File(uploadFolder, originalFileName);
+
+            if (destFile.exists()) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(Map.of("error", "이미 같은 이름의 파일이 존재합니다."));
+            }
+
+            file.transferTo(destFile);
+
+            // 2. 파일에서 메타데이터 읽기
+            Metadata metadata = ImageMetadataReader.readMetadata(destFile);
 
             // GPS 정보 추출
             String dateTimeOriginal = null;
@@ -69,7 +95,6 @@ public class MetadataController {
                             longitudeStr = tagValue;
                             break;
                     }
-                    // 태그 이름과 값을 메타데이터 맵에 추가
 
                 }
             }
@@ -95,7 +120,7 @@ public class MetadataController {
 
             // 이미지 메타데이터 DB에 저장
             ImageMetaData imageMetaData = new ImageMetaData();
-            imageMetaData.setFileName(file.getOriginalFilename());
+            imageMetaData.setFileName(originalFileName);
             imageMetaData.setLatitude(latitude);
             imageMetaData.setLongitude(longitude);
             if (dateTimeOriginal != null) {
@@ -113,5 +138,19 @@ public class MetadataController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "메타데이터 추출 실패"));
         }
+    }
+
+    @GetMapping("/api/search")
+    public ResponseEntity<List<ImageMetaData>> searchImages(
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) Integer radius,
+            @RequestParam(required = false) String unit,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ){
+        List<ImageMetaData> results = imageMetaDataService.search(searchType,latitude, longitude, radius, unit, startDate, endDate);
+        return ResponseEntity.ok(results);
     }
 }
