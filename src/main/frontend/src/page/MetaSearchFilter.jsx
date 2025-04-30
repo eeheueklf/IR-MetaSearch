@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 
 // 빠른 단위 선택 버튼용 옵션
 const UNIT_OPTIONS = [
     { label: '연도', value: 'year' },
     { label: '월', value: 'month' },
     { label: '일', value: 'day' },
-    { label: '시간', value: 'time' },
 ];
 
 // 빠른 반경 선택 버튼용 옵션
@@ -95,6 +94,10 @@ const MetaSearchFilter = ({ onFilterChange }) => {
         if (onFilterChange) onFilterChange({ searchType, unit: selectedUnit });
     };
 
+    const location = useLocation();
+
+    const { fileName } = location.state || {};
+
     return (
         <div>
             <ResultWrap>
@@ -142,7 +145,7 @@ const MetaSearchFilter = ({ onFilterChange }) => {
                 </FilterCard>
             </ResultWrap>
             <ButtonContainer>
-                <FloatingButton onClick={() => navigate("/metasearch", {state : {searchType, radius, unit}})}>
+                <FloatingButton onClick={() => navigate("/metasearch", {state : {searchType, radius, unit, fileName}})}>
                     📸 + 이미지 검색하기
                 </FloatingButton>
             </ButtonContainer>

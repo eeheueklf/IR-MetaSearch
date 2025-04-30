@@ -11,8 +11,8 @@ const Header = () => {
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
-        if (file && file.size > 10 * 1024 * 1024) {
-            alert("10MB 이하의 이미지만 업로드할 수 있어요.");
+        if (file && file.size > 20 * 1024 * 1024) {
+            alert("20MB 이하의 이미지만 업로드할 수 있어요.");
             return;
         }
         setFile(file);

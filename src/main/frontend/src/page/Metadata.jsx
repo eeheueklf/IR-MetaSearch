@@ -12,8 +12,6 @@ function Metadata() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log("selectedFile:", selectedFile);
-
         if (!selectedFile) return;
 
         const formData = new FormData();
@@ -72,7 +70,11 @@ function Metadata() {
             {/*<DateTimeFilter/>*/}
 
                 <FloatingButton
-                    onClick={() => navigate("/searchfilter")}
+                    onClick={() => navigate("/searchfilter", {
+                        state: {
+                            fileName: selectedFile?.name
+                        }
+                    })}
                     disabled={!selectedFile}
                     style={{
                         backgroundColor: selectedFile ? '#000' : '#666',

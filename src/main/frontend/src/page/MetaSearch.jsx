@@ -5,46 +5,65 @@ import { useLocation } from "react-router-dom";
 
 function MetaSearch() {
     const location = useLocation();
-    const filter = location.state || {};
 
     const [result, setResults] = useState(null);
     const [error, setError] = useState(null);
 
+    const [loading, setLoading] = useState(true);
+
+    const fileName = location.state?.fileName;
+    const radius = location.state?.radius;
+    const searchType = location.state?.searchType;
+    const unit = location.state?.unit;
+
     useEffect(() => {
         const fetchResults = async () => {
             try {
+                setLoading(true);
                 const response = await axios.get("http://localhost:8080/api/search", {
-                    params: filter
+                    params: {
+                        fileName,
+                        radius,
+                        searchType,
+                        unit
+                    }
                 });
+                console.log("Response Data: ", response.data);
                 setResults(response.data);
+                setLoading(false);
             } catch (err) {
                 setError("검색 결과를 불러오지 못했습니다.");
+                setLoading(false);
             }
         };
         fetchResults();
-    }, [filter]);
+    }, [fileName, radius, searchType, unit]);
+
 
 
     return (
         <ResultWrap>
-            <h1>🔎 검색 결과</h1>
+            <h1>🔎 총 {result ? result.length : 0}개의 검색 결과 </h1>
             <FilterCard>
-                {/*{loading && <InfoText>로딩 중...</InfoText>}*/}
-                {/*{error && <ErrorText>{error}</ErrorText>}*/}
-                {/*{!loading && !error && results.length === 0 && (*/}
-                {/*    <InfoText>검색 결과가 없습니다.</InfoText>*/}
-                {/*)}*/}
-                {/*{!loading && !error && results.map((item, idx) => (*/}
-                {/*    <ResultItem key={idx}>*/}
-                {/*        <Thumb src={`/uploads/${item.fileName}`} alt={item.fileName} />*/}
-                {/*        <MetaInfo>*/}
-                {/*            <div><strong>파일명:</strong> {item.fileName}</div>*/}
-                {/*            <div><strong>위도:</strong> {item.latitude}</div>*/}
-                {/*            <div><strong>경도:</strong> {item.longitude}</div>*/}
-                {/*            <div><strong>촬영일시:</strong> {item.timestamp}</div>*/}
-                {/*        </MetaInfo>*/}
-                {/*    </ResultItem>*/}
-                {/*))}*/}
+                {loading && <InfoText>로딩 중...</InfoText>}
+                {!loading && error && <ErrorText>{error}</ErrorText>}
+                {!loading && !error && result?.length === 0 && (
+                    <InfoText>검색 결과가 없습니다.</InfoText>
+                )}
+                {!loading && !error &&
+                    <div>
+                    {result.map((image) => (
+                        <div key={image.id}>
+                            {/*<span>{image.timestamp}</span>*/}
+                            <img
+                                src={`http://localhost:8080/upload/${image.fileName}`}
+                                alt={image.fileName}
+                                style={{width: "200px", height: "200px", objectFit: "cover"}}
+                            />
+                        </div>
+                    ))}
+                    </div>
+                }
             </FilterCard>
         </ResultWrap>
     );
