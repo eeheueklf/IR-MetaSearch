@@ -23,4 +23,7 @@ public interface ImageMetaDataRepository extends JpaRepository<ImageMetaData, Lo
     @Query("SELECT imd FROM ImageMetaData imd WHERE YEAR(imd.timestamp) = :year AND MONTH(imd.timestamp) = :month AND DAY(imd.timestamp) = :day")
     List<ImageMetaData> findByDay(@Param("year") int year, @Param("month") int month, @Param("day") int day);
 
-    }
+    @Query("SELECT imd FROM ImageMetaData imd WHERE imd.timestamp BETWEEN :start AND :end")
+    List<ImageMetaData> findByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+}

@@ -75,5 +75,38 @@ public class ImageMetaDataService {
         return EARTH_RADIUS * c;
     }
 
+    public void measurePerformance() {
+        long start, end;
+
+        // 1) findAll()
+        start = System.currentTimeMillis();
+        List<ImageMetaData> all = imageMetaDataRepository.findAll();
+        end = System.currentTimeMillis();
+        System.out.println("findAll() 실행 시간: " + (end - start) + "ms, 결과 수: " + all.size());
+
+        // 2) timestamp BETWEEN (예: 2022년 한 해)
+        LocalDateTime startTime = LocalDateTime.of(2022, 1, 1, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2022, 12, 31, 23, 59, 59);
+
+        start = System.currentTimeMillis();
+        List<ImageMetaData> byTimestamp = imageMetaDataRepository.findByDateRange(startTime, endTime);
+        end = System.currentTimeMillis();
+        System.out.println("timestamp BETWEEN 실행 시간: " + (end - start) + "ms, 결과 수: " + byTimestamp.size());
+
+        // 3) location 필터 (메모리 필터링)
+        double baseLat = 37.5; // 임의 기준점
+        double baseLon = 126.5;
+        double radiusKm = 5;
+
+        start = System.currentTimeMillis();
+        List<ImageMetaData> allForLocation = imageMetaDataRepository.findAll();
+        List<ImageMetaData> filtered = allForLocation.stream()
+                .filter(img -> {
+                    double dist = calculateDistance(img.getLatitude(), img.getLongitude(), baseLat, baseLon);
+                    return dist <= radiusKm;
+                }).toList();
+        end = System.currentTimeMillis();
+        System.out.println("filterByRadius (메모리 필터) 실행 시간: " + (end - start) + "ms, 결과 수: " + filtered.size());
+    }
 
 }
