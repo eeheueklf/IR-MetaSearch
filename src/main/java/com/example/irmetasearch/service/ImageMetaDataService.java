@@ -17,9 +17,9 @@ public class ImageMetaDataService {
     private ImageMetaDataRepository imageMetaDataRepository;
 
     public void save(ImageMetaData imageMetaData) {
+        imageMetaData.setLocation(imageMetaData.getLatitude(), imageMetaData.getLongitude()); // ⭐ 추가
         imageMetaDataRepository.save(imageMetaData);
     }
-
     public List<ImageMetaData> searchImages(String fileName, double radius, String searchType, String unit) {
         // 1. 기준 이미지 가져오기
         ImageMetaData base = imageMetaDataRepository.findByFileName(fileName);
@@ -30,22 +30,31 @@ public class ImageMetaDataService {
 
         // 2. 조건별 필터링
         if ("time".equals(searchType)) {
-            int year = base.getTimestamp().getYear();
-            int month = base.getTimestamp().getMonthValue();
-            int day = base.getTimestamp().getDayOfMonth();
+            LocalDateTime start;
+            LocalDateTime end;
 
             switch (unit) {
                 case "year":
-                    return imageMetaDataRepository.findByYear(year);
+                    start = base.getTimestamp().withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                    end = start.plusYears(1);
+                    break;
                 case "month":
-                    return imageMetaDataRepository.findByMonth(year, month);
+                    start = base.getTimestamp().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                    end = start.plusMonths(1);
+                    break;
                 case "day":
-                    return imageMetaDataRepository.findByDay(year, month, day);
+                    start = base.getTimestamp().withHour(0).withMinute(0).withSecond(0).withNano(0);
+                    end = start.plusDays(1);
+                    break;
                 default:
                     return Collections.emptyList();
             }
+
+            return imageMetaDataRepository.findByDateRange(start, end);
         } else if ("location".equals(searchType)) {
-            return filterByRadius(imageMetaDataRepository.findAll(), base.getLatitude(), base.getLongitude(), radius);
+            String pointWKT = String.format("POINT(%f %f)", base.getLatitude(), base.getLongitude());
+            return imageMetaDataRepository.findWithinRadius(pointWKT, radius * 1000);
+//            return filterByRadius(imageMetaDataRepository.findAll(), base.getLatitude(), base.getLongitude(), radius);
         } else {
             return Collections.emptyList();
         }
@@ -79,34 +88,64 @@ public class ImageMetaDataService {
         long start, end;
 
         // 1) findAll()
-        start = System.currentTimeMillis();
-        List<ImageMetaData> all = imageMetaDataRepository.findAll();
-        end = System.currentTimeMillis();
-        System.out.println("findAll() 실행 시간: " + (end - start) + "ms, 결과 수: " + all.size());
+//        start = System.currentTimeMillis();
+//        List<ImageMetaData> all = imageMetaDataRepository.findAll();
+//        end = System.currentTimeMillis();
+//        System.out.println("findAll() 실행 시간: " + (end - start) + "ms, 결과 수: " + all.size());
 
-        // 2) timestamp BETWEEN (예: 2022년 한 해)
-        LocalDateTime startTime = LocalDateTime.of(2022, 1, 1, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2022, 12, 31, 23, 59, 59);
-
-        start = System.currentTimeMillis();
-        List<ImageMetaData> byTimestamp = imageMetaDataRepository.findByDateRange(startTime, endTime);
-        end = System.currentTimeMillis();
-        System.out.println("timestamp BETWEEN 실행 시간: " + (end - start) + "ms, 결과 수: " + byTimestamp.size());
+        // 2) timestamp BETWEEN (22년 한 해)
+//        LocalDateTime startTime = LocalDateTime.of(2022, 1, 1, 0, 0);
+//        LocalDateTime endTime = LocalDateTime.of(2022, 12, 31, 23, 59, 59);
+//        start = System.currentTimeMillis();
+//        List<ImageMetaData> byTimestamp = imageMetaDataRepository.findByDateRange(startTime, endTime);
+//        end = System.currentTimeMillis();
+//        System.out.println("timestamp BETWEEN(한 해) 실행 시간: " + (end - start) + "ms, 결과 수: " + byTimestamp.size());
+//
+//        List<ImageMetaData> result;
+//        start = System.currentTimeMillis();
+//        result = imageMetaDataRepository.findByDateRange(LocalDateTime.of(2022,1,1,0,0), LocalDateTime.of(2022,12,31,23,59,59));
+//        System.out.println("범위 사용 쿼리 실행 시간: " + (System.currentTimeMillis() - start) + "ms, 결과수: " + result.size());
 
         // 3) location 필터 (메모리 필터링)
         double baseLat = 37.5; // 임의 기준점
         double baseLon = 126.5;
         double radiusKm = 5;
 
+        // 1) DB에서 전체 데이터 읽기
         start = System.currentTimeMillis();
-        List<ImageMetaData> allForLocation = imageMetaDataRepository.findAll();
-        List<ImageMetaData> filtered = allForLocation.stream()
-                .filter(img -> {
-                    double dist = calculateDistance(img.getLatitude(), img.getLongitude(), baseLat, baseLon);
-                    return dist <= radiusKm;
-                }).toList();
+        List<ImageMetaData> allData = imageMetaDataRepository.findAll();
         end = System.currentTimeMillis();
-        System.out.println("filterByRadius (메모리 필터) 실행 시간: " + (end - start) + "ms, 결과 수: " + filtered.size());
+        System.out.println("findAll() 실행 시간: " + (end - start) + "ms, 결과 수: " + allData.size());
+
+        // 2) 메모리 필터링 (filterByRadius() 메서드 사용)
+        start = System.currentTimeMillis();
+        List<ImageMetaData> filtered = filterByRadius(allData, baseLat, baseLon, radiusKm);
+        end = System.currentTimeMillis();
+        System.out.println("filterByRadius 1km 실행 시간: " + (end - start) + "ms, 결과 수: " + filtered.size());
+
+        radiusKm = 100;
+        start = System.currentTimeMillis();
+        filtered = filterByRadius(allData, baseLat, baseLon, radiusKm);
+        end = System.currentTimeMillis();
+        System.out.println("filterByRadius 100km 실행 시간: " + (end - start) + "ms, 결과 수: " + filtered.size());
+
+
+        String pointWKT = String.format("POINT(%f %f)", baseLat, baseLon);
+
+        radiusKm = 5;
+        start = System.currentTimeMillis();
+        List<ImageMetaData> dbFiltered = imageMetaDataRepository.findWithinRadius(pointWKT, radiusKm * 1000);
+        end = System.currentTimeMillis();
+        System.out.println("findWithinRadius 1km (DB 쿼리) 실행 시간: " + (end - start) + "ms, 결과 수: " + dbFiltered.size());
+
+
+        pointWKT = String.format("POINT(%f %f)", baseLat, baseLon);
+        radiusKm = 100;
+        start = System.currentTimeMillis();
+        dbFiltered = imageMetaDataRepository.findWithinRadius(pointWKT, radiusKm * 1000);
+        end = System.currentTimeMillis();
+        System.out.println("findWithinRadius 100km (DB 쿼리) 실행 시간: " + (end - start) + "ms, 결과 수: " + dbFiltered.size());
+
     }
 
 }

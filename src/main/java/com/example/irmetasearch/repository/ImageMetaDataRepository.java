@@ -11,19 +11,22 @@ public interface ImageMetaDataRepository extends JpaRepository<ImageMetaData, Lo
 
     ImageMetaData findByFileName(String fileName);
 
-    //연도
-    @Query("SELECT imd FROM ImageMetaData imd WHERE YEAR(imd.timestamp) = :year")
-    List<ImageMetaData> findByYear(@Param("year") int year);
-
-    //연도-월
-    @Query("SELECT imd FROM ImageMetaData imd WHERE YEAR(imd.timestamp) = :year AND MONTH(imd.timestamp) = :month")
-    List<ImageMetaData> findByMonth(@Param("year") int year, @Param("month") int month);
-
-    //연도-월-일
-    @Query("SELECT imd FROM ImageMetaData imd WHERE YEAR(imd.timestamp) = :year AND MONTH(imd.timestamp) = :month AND DAY(imd.timestamp) = :day")
-    List<ImageMetaData> findByDay(@Param("year") int year, @Param("month") int month, @Param("day") int day);
-
-    @Query("SELECT imd FROM ImageMetaData imd WHERE imd.timestamp BETWEEN :start AND :end")
+    @Query("SELECT imd FROM ImageMetaData imd WHERE imd.timestamp >= :start AND imd.timestamp < :end")
     List<ImageMetaData> findByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query(value = "SELECT * FROM image_meta_data WHERE ST_Distance_Sphere(location, ST_GeomFromText(:point, 4326)) <= :radius", nativeQuery = true)
+    List<ImageMetaData> findWithinRadius(
+            @Param("point") String pointWKT,
+            @Param("radius") double radiusInMeters
+    );
+
+    @Query(value = "SELECT * FROM image_meta_data " +
+            "WHERE ST_Contains(ST_Buffer(ST_GeomFromText(:point, 4326), :radius), location)",
+            nativeQuery = true)
+    List<ImageMetaData> findWithRadius(
+            @Param("point") String pointWKT,
+            @Param("radius") double radiusInMeters
+    );
+
 
 }

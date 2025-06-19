@@ -41,8 +41,12 @@ dependencies {
 	implementation 'com.drewnoakes:metadata-extractor:2.18.0'//metadata-extractor - 250323
 
 	implementation 'org.apache.commons:commons-math3:3.6.1'
+	implementation 'org.locationtech.jts:jts-core:1.19.0'
 
 	implementation 'com.h2database:h2'
+
+	implementation 'org.hibernate:hibernate-spatial:6.4.4.Final'
+
 }
 
 tasks.named('test') {

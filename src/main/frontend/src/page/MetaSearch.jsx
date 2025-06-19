@@ -53,14 +53,21 @@ function MetaSearch() {
                 {!loading && !error &&
                     <div>
                     {result.map((image) => (
-                        <div key={image.id}>
+                        <ImagePair key={image.id}>
                             {/*<span>{image.timestamp}</span>*/}
                             <img
                                 src={`http://localhost:8080/upload/${image.fileName}`}
                                 alt={image.fileName}
                                 style={{width: "200px", height: "200px", objectFit: "cover"}}
                             />
-                        </div>
+                            <MetaInfo>
+                                <h3>📰 추출된 EXIF 메타데이터</h3>
+                                <div><b>파일명:</b> {image.fileName}</div>
+                                <div><b>촬영 시각:</b> {image.timestamp}</div>
+                                <div><b>위도:</b> {image.latitude}</div>
+                                <div><b>경도:</b> {image.longitude}</div>
+                            </MetaInfo>
+                        </ImagePair>
                     ))}
                     </div>
                 }
@@ -89,6 +96,17 @@ const FilterCard = styled.div`
     max-width: 660px;
     width: 100%;
     margin-bottom: 50px;
+`;
+
+const ImagePair =styled.div`
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f4fa;
+    &:last-child {
+        border-bottom: none;
+    }
 `;
 
 const ResultItem = styled.div`
